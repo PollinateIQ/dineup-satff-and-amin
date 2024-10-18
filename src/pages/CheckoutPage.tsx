@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
 const CheckoutPage: React.FC = () => {
   const { cartItems, clearCart } = useCart();
@@ -18,27 +20,30 @@ const CheckoutPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-        {cartItems.map((item) => (
-          <div key={item.id} className="flex justify-between items-center mb-2">
-            <span>{item.name} x {item.quantity}</span>
-            <span>${(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-        <div className="border-t mt-4 pt-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {cartItems.map((item) => (
+            <div key={item.id} className="flex justify-between items-center mb-2">
+              <span className="text-sm">{item.name} x {item.quantity}</span>
+              <span className="text-sm font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+            </div>
+          ))}
+          <hr className="my-4 border-t border-gray-200" />
           <div className="flex justify-between items-center font-bold">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>
           </div>
-        </div>
-        <button
-          onClick={handlePlaceOrder}
-          className="w-full mt-6 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition duration-300"
-        >
-          Place Order
-        </button>
-      </div>
+          <Button
+            onClick={handlePlaceOrder}
+            className="w-full mt-6"
+          >
+            Place Order
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

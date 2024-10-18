@@ -1,22 +1,19 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// src/context/AuthContext.tsx
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import api, { login, getProfile, logoutUser } from '../utils/api';
+import { UserProfile } from '../types/User';
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (username: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-}
+  user: UserProfile | null;
+  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+  loginUser: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+}             
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -24,47 +21,55 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const initializeUser = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          const profile = await getProfile();
+          setUser(profile);
+        } catch (error) {
+          console.error(error);
+          await logout();
+        }
+      }
+    };
+    initializeUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    // Simulating a login with admin role
-    const userData: User = {
-      id: '1',
-      username: 'Admin User',
-      email: email,
-      role: 'admin'
-    };
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+  const loginUser = async (email: string, password: string) => {
+    try {
+      const data = await login(email, password);
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+      api.defaults.headers.Authorization = `Bearer ${data.access}`;
+      const profile = await getProfile();
+      setUser(profile);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   };
 
-  const signup = async (username: string, email: string, password: string) => {
-    // Simulating a signup
-    const userData: User = {
-      id: '2',
-      username: username,
-      email: email,
-      role: 'customer'
-    };
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loginUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

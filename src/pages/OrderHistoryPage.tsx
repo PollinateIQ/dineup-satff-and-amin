@@ -2,6 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Clock } from 'lucide-react';
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 
 // Mock order history data
 const mockOrderHistory = [
@@ -25,37 +28,37 @@ const OrderHistoryPage: React.FC = () => {
       transition={{ duration: 0.5 }}
     >
       <h1 className="text-3xl font-bold mb-6">Order History</h1>
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        {mockOrderHistory.map((order, index) => (
-          <motion.div
-            key={order.id}
-            className="border-b last:border-b-0 p-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xl font-semibold">Order #{order.id}</h2>
-              <span className={`px-2 py-1 rounded ${
-                order.status === 'Completed' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'
-              }`}>
+      {mockOrderHistory.map((order, index) => (
+        <motion.div
+          key={order.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: index * 0.1 }}
+          className="mb-4"
+        >
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Order #{order.id}</CardTitle>
+              <Badge 
+                variant={order.status === 'Completed' ? 'default' : 'secondary'}
+                className={order.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+              >
                 {order.status}
-              </span>
-            </div>
-            <p className="text-gray-600 mb-2"><Clock className="inline mr-2" />{order.date}</p>
-            <p className="text-lg font-bold mb-2">Total: ${order.total.toFixed(2)}</p>
-            <motion.button
-              onClick={() => handleNewOrder(order.id)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded flex items-center"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ShoppingBag className="mr-2" />
-              Reorder
-            </motion.button>
-          </motion.div>
-        ))}
-      </div>
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-2">
+                <Clock className="inline mr-2" />{order.date}
+              </p>
+              <p className="text-lg font-bold mb-2">Total: ${order.total.toFixed(2)}</p>
+              <Button onClick={() => handleNewOrder(order.id)}>
+                <ShoppingBag className="mr-2" />
+                Reorder
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
     </motion.div>
   );
 };

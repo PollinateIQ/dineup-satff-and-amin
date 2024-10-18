@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Review, RestaurantRating } from '../types/review';
 import ReviewForm from '../components/ReviewForm';
 import ReviewList from '../components/ReviewList';
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
 // Mock data (replace with actual API calls in a real application)
 const mockReviews: Review[] = [
@@ -59,13 +60,23 @@ const RestaurantPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4">Restaurant Name</h1>
-      <div className="mb-4">
-        <span className="text-2xl font-semibold">{rating.averageRating}</span>
-        <span className="text-gray-600"> ({rating.totalReviews} reviews)</span>
-      </div>
-      <ReviewForm onSubmit={handleReviewSubmit} />
-      <ReviewList reviews={reviews} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-3xl">Restaurant Name</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <span className="text-2xl font-semibold">{rating.averageRating}</span>
+            <span className="text-gray-600"> ({rating.totalReviews} reviews)</span>
+          </div>
+          <hr className="my-4 border-t border-gray-200" />
+          <h2 className="text-2xl font-semibold mb-4">Write a Review</h2>
+          <ReviewForm onSubmit={handleReviewSubmit} />
+          <hr className="my-4 border-t border-gray-200" />
+          <h2 className="text-2xl font-semibold mb-4">Reviews</h2>
+          <ReviewList reviews={reviews} />
+        </CardContent>
+      </Card>
     </div>
   );
 };

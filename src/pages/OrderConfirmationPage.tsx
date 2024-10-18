@@ -1,17 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
 const OrderConfirmationPage: React.FC = () => {
   return (
-    <div className="container mx-auto px-4 py-8 text-center">
-      <h1 className="text-3xl font-bold mb-6">Order Confirmed!</h1>
-      <p className="text-xl mb-6">Thank you for your order. It will be ready shortly.</p>
-      <Link
-        to="/menu"
-        className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300"
-      >
-        Back to Menu
-      </Link>
+    <div className="container mx-auto px-4 py-8">
+      <Card className="max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold text-center">Order Confirmed!</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center">
+          <p className="text-xl mb-6">Thank you for your order. It will be ready shortly.</p>
+          <Button asChild>
+            <Link to="/menu">
+              Back to Menu
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
