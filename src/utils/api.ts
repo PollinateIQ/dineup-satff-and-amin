@@ -1,7 +1,7 @@
-// src/services/api.ts
+// src/utils/api.ts
 
 import axios, { AxiosInstance } from 'axios';
-import { UserProfile, Restaurant, MenuItem, Order, CartItem, Review, Favorite, PromoCode } from '../types';
+import { UserProfile, Restaurant, MenuItem, Order, CartItem, Review, Favorite, PromoCode } from '../types/index';
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://backenddineup.up.railway.app/api',
@@ -15,7 +15,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  error => Promise.reject(error),
+  error => Promise.reject(error)
 );
 
 // Authentication API calls
