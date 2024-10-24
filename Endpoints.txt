@@ -1,0 +1,241 @@
+# Django Admin Site
+/admin/                             - Access the Django admin interface
+
+# Authentication Endpoints
+/api/token/                         - POST: Obtain JWT access and refresh tokens (Login)
+/api/token/refresh/                 - POST: Refresh JWT access token
+
+# User Registration and Profile
+/api/register/                      - POST: Register a new user
+/api/user-profile/                  - GET: Retrieve current user's profile
+/profile/                           - GET: Retrieve current user's profile (alternative endpoint)
+
+# API Endpoints Registered via Router
+
+## Admin Endpoints
+/admin/restaurants/                 - [Admin] List/Create/Update/Delete restaurants (RestaurantViewSet)
+/admin/users/                       - [Admin] List/Create/Update/Delete users (UserViewSet)
+
+## Staff Endpoints
+/staff/orders/                      - [Staff] List/Create/Update/Delete orders (OrderViewSet)
+
+## User Endpoints
+/users/menu/                        - [User] List available menu items (MenuItemViewSet)
+
+## General Endpoints
+/orders/                            - List/Create/Update/Delete orders (OrderViewSet)
+/payments/                          - List/Create/Update/Delete payments (PaymentViewSet)
+/menu-items/                        - List/Create/Update/Delete menu items (MenuItemViewSet)
+/cart/                              - List/Add/Remove items in the shopping cart (CartViewSet)
+
+# Models and Their Relationships
+
+## Tenant (Restaurant)
+- Represents a restaurant tenant.
+- Fields:
+  - `restaurant_id`
+  - `name`
+  - `address`
+  - `contact_info`
+  - `tenant_identifier`
+  - `created_at`
+
+## User
+- Custom user model extending `AbstractUser`.
+- Fields:
+  - `user_id`
+  - `restaurant` (ForeignKey to Tenant)
+  - `name`
+  - `email` (unique)
+  - `role`
+  - `created_at`
+- Authentication:
+  - `USERNAME_FIELD` is set to `email`.
+  - `REQUIRED_FIELDS` include `username`.
+
+## SocialAccount
+- Represents a social account linked to a user.
+- Fields:
+  - `user` (ForeignKey to User)
+  - `provider`
+  - `uid` (unique)
+  - `extra_data`
+  - `connected_at`
+
+## Table
+- Represents a table in a restaurant.
+- Fields:
+  - `table_id`
+  - `restaurant` (ForeignKey to Tenant)
+  - `table_number`
+  - `seating_capacity`
+  - `link`
+
+## Category
+- Represents a menu category.
+- Fields:
+  - `category_id`
+  - `restaurant` (ForeignKey to Tenant)
+  - `name`
+  - `description`
+
+## MenuItem
+- Represents an item on the restaurant's menu.
+- Fields:
+  - `item_id`
+  - `restaurant` (ForeignKey to Tenant)
+  - `category` (ForeignKey to Category)
+  - `name`
+  - `description`
+  - `price`
+  - `availability`
+- Constraints:
+  - Price must be non-negative (`chk_price_non_negative`).
+- Indexes:
+  - Index on `restaurant` and `category` (`restaurant_category_index`).
+
+## Order
+- Represents an order placed by a user.
+- Fields:
+  - `order_id`
+  - `restaurant` (ForeignKey to Tenant)
+  - `table` (ForeignKey to Table)
+  - `user` (ForeignKey to User)
+  - `total_price`
+  - `status`
+  - `created_at`
+  - `updated_at`
+
+## OrderItem
+- Represents an individual item within an order.
+- Fields:
+  - `order_item_id`
+  - `order` (ForeignKey to Order)
+  - `item` (ForeignKey to MenuItem)
+  - `quantity`
+  - `price`
+
+## Inventory
+- Represents the inventory of a menu item.
+- Fields:
+  - `inventory_id`
+  - `restaurant` (ForeignKey to Tenant)
+  - `item` (ForeignKey to MenuItem)
+  - `quantity_in_stock`
+  - `reorder_level`
+  - `last_restocked_at`
+  - `created_at`
+
+## Payment
+- Represents a payment for an order.
+- Fields:
+  - `payment_id`
+  - `order` (ForeignKey to Order)
+  - `restaurant` (ForeignKey to Tenant)
+  - `payment_method`
+  - `payment_status`
+  - `amount`
+  - `transaction_id`
+  - `created_at`
+  - `updated_at`
+
+## Transaction
+- Represents a financial transaction related to an order.
+- Fields:
+  - `transaction_id`
+  - `order` (ForeignKey to Order)
+  - `payment` (ForeignKey to Payment)
+  - `restaurant` (ForeignKey to Tenant)
+  - `transaction_type`
+  - `amount`
+  - `status`
+  - `created_at`
+  - `updated_at`
+- Constraints:
+  - Amount must be non-negative (`chk_amount_non_negative`).
+
+## TemporarySession
+- Represents a temporary session for a guest user.
+- Fields:
+  - `guest_session_id`
+  - `session_token` (unique)
+  - `restaurant` (ForeignKey to Tenant)
+  - `cart_data`
+  - `expires_at`
+  - `created_at`
+
+## Customization
+- Represents restaurant-specific customizations.
+- Fields:
+  - `customization_id`
+  - `restaurant` (ForeignKey to Tenant)
+  - `logo_image`
+  - `theme_color`
+  - `background_image`
+  - `font_style`
+  - `created_at`
+
+## Image
+- Represents images uploaded by a restaurant.
+- Fields:
+  - `image_id`
+  - `restaurant` (ForeignKey to Tenant)
+  - `image_file`
+  - `image_type`
+  - `uploaded_at`
+
+## Cart
+- Represents a shopping cart for a user.
+- Fields:
+  - `cart_id`
+  - `user` (ForeignKey to User)
+  - `restaurant` (ForeignKey to Tenant)
+  - `items` (ManyToManyField with MenuItem)
+  - `total_price`
+  - `created_at`
+  - `updated_at`
+
+## Receipt
+- Represents a receipt for an order.
+- Fields:
+  - `receipt_id`
+  - `order` (ForeignKey to Order)
+  - `restaurant` (ForeignKey to Tenant)
+  - `user` (ForeignKey to User)
+  - `total_amount`
+  - `payment_method`
+  - `receipt_data`
+  - `created_at`
+
+# Notes:
+
+- **Authentication**:
+  - Uses JWT authentication via `rest_framework_simplejwt`.
+  - The login endpoint `/api/token/` expects `username` and `password` fields.
+  - The `User` model uses `email` as the `USERNAME_FIELD`, which may cause issues with the default JWT authentication expecting `username`.
+
+- **CORS Settings**:
+  - In `settings.py`, `CORS_ALLOWED_ORIGINS` is configured.
+    - For development (`DEBUG` is `True`):
+      - Allowed origins include `http://localhost:5174`.
+    - For production:
+      - Currently set to `["*"]`, which is not recommended for production environments.
+
+# Suggested Fix:
+
+**Issue**: The frontend is sending `email` instead of `username` in the login request, causing a 500 Internal Server Error because the backend expects `username` and `password` fields.
+
+**Solution**:
+
+1. **Modify the Frontend Login Request**:
+
+   - Update the frontend code to send `username` instead of `email` when making the login request to `/api/token/`.
+
+   ```tsx
+   // src/utils/api.ts
+   export const login = async (data: { email: string; password: string }) => {
+     return await axiosInstance.post('/api/token/', {
+       username: data.email, // Changed from 'email' to 'username'
+       password: data.password,
+     });
+   };

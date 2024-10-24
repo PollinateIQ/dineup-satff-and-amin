@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Header from '../components/staff/Header';
-import TableView from '../components/staff/TableView';
-import OrderView from '../components/staff/OrderView';
-import Footer from '../components/staff/Footer';
-import Sidebar from '../components/staff/Sidebar';
-import { Table, Order } from '../types/staff';
+import Header from '../../staff/components/Header';
+import TableView from '../../staff/components/TableView';
+import OrderView from '../../staff/components/OrderView';
+import Footer from '../../staff/components/Footer';
+import Sidebar from '../../staff/components/Sidebar';
+import { Table, Order } from '../../types/staff';
 
 const StaffApp: React.FC = () => {
   const [activeView, setActiveView] = useState<'tables' | 'orders'>('tables');

@@ -6,53 +6,32 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Skeleton } from "../components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-
-interface Order {
-  id: string;
-  tableNumber: number;
-  items: { name: string; quantity: number; price: number }[];
-  status: 'pending' | 'preparing' | 'ready' | 'completed';
-  total: number;
-  createdAt: string;
-}
+import { getOrderStatus } from '../utils/api';
+import { Order } from '../types';
 
 const OrderPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrder = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        if (!orderId) {
-          throw new Error("No order ID provided");
-        }
+      if (!orderId) {
+        setError("No order ID provided");
+        setIsLoading(false);
+        return;
+      }
 
-        // Mock order data
-        const mockOrder: Order = {
-          id: orderId,
-          tableNumber: 5,
-          items: [
-            { name: 'Burger', quantity: 2, price: 10.99 },
-            { name: 'Fries', quantity: 1, price: 3.99 },
-            { name: 'Soda', quantity: 2, price: 1.99 },
-          ],
-          status: 'preparing',
-          total: 29.95,
-          createdAt: new Date().toISOString(),
-        };
-        setOrder(mockOrder);
+      try {
+        const fetchedOrder = await getOrderStatus(parseInt(orderId));
+        setOrder(fetchedOrder);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError('Failed to fetch order details');
+        console.error('Error fetching order details:', err);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -63,7 +42,7 @@ const OrderPage: React.FC = () => {
     navigate('/menu');
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Skeleton className="h-12 w-2/3 mb-4" />
@@ -93,7 +72,7 @@ const OrderPage: React.FC = () => {
   }
 
   if (!order) {
-    return null;
+    return <div>No order found</div>;
   }
 
   const statusSteps = [
@@ -114,8 +93,7 @@ const OrderPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-lg"><strong>Table Number:</strong> {order.tableNumber}</p>
-            <p className="text-lg"><strong>Created At:</strong> {new Date(order.createdAt).toLocaleString()}</p>
+            <p className="text-lg"><strong>Created At:</strong> {new Date(order.created_at).toLocaleString()}</p>
           </div>
           
           <div className="mb-6">
@@ -147,14 +125,14 @@ const OrderPage: React.FC = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="flex justify-between border-b py-2"
               >
-                <span>{item.name} x {item.quantity}</span>
+                <span>{item.item} x {item.quantity}</span>
                 <span>${(item.price * item.quantity).toFixed(2)}</span>
               </motion.li>
             ))}
           </ul>
           
           <div className="text-xl font-bold mb-4">
-            Total: ${order.total.toFixed(2)}
+            Total: ${order.total_price.toFixed(2)}
           </div>
 
           <Button onClick={handleNewOrder}>

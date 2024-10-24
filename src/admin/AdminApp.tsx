@@ -5,9 +5,8 @@ import UserManagement from './pages/UserManagement';
 import MenuManagement from './pages/MenuManagement';
 import OrderManagement from './pages/OrderManagement';
 import InventoryManagement from './pages/InventoryManagement';
-import FinancesManagement from './pages/FinancesManagement';
+import FinancialAnalysis from './pages/FinancesManagement';
 import TablesManagement from './pages/TablesManagement';
-import QRCodeGenerator from './pages/QRCodeGenerator';
 import RestaurantSettings from './pages/RestaurantSettings';
 
 const AdminApp: React.FC = () => {
@@ -19,9 +18,8 @@ const AdminApp: React.FC = () => {
         <Route path="menu" element={<MenuManagement />} />
         <Route path="orders" element={<OrderManagement />} />
         <Route path="inventory" element={<InventoryManagement />} />
-        <Route path="finances" element={<FinancesManagement />} />
+        <Route path="finances" element={<FinancialAnalysis />} />
         <Route path="tables" element={<TablesManagement />} />
-        <Route path="qr-generator" element={<QRCodeGenerator />} />
         <Route path="settings" element={<RestaurantSettings />} />
       </Route>
     </Routes>

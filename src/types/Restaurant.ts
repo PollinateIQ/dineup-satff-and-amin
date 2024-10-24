@@ -1,4 +1,5 @@
 // src/types/Restaurant.ts
+import { MenuItem, MenuCategory } from './MenuItem';
 
 export interface Restaurant {
     id: number;
@@ -15,5 +16,6 @@ export interface Restaurant {
     is_active: boolean;
     created_at: string; // ISO date string
     updated_at: string; // ISO date string
-  }
-  
+    menu_items?: MenuItem[];
+    menu_categories?: MenuCategory[];
+}

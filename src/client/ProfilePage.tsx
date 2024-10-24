@@ -7,8 +7,6 @@ const ProfilePage: React.FC = () => {
   const { user } = useAuth();
 
   // Mock loyalty data (replace with actual data from backend)
-  const loyaltyPoints = 750;
-  const loyaltyTier = 'Silver';
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -1,15 +1,34 @@
 // src/context/AuthContext.tsx
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import api, { login, getProfile, logoutUser } from '../utils/api';
-import { UserProfile } from '../types/User';
+import { useNavigate } from 'react-router-dom';
+import { 
+  api, 
+  login, 
+  register, 
+  getProfile, 
+  logoutUser,
+  socialAuthGoogle, 
+  socialAuthApple,
+} from '../utils/api';
+import { 
+  UserProfile, 
+  LoginCredentials, 
+  RegistrationData, 
+  TokenPair 
+} from '../types/User';
 
 interface AuthContextType {
   user: UserProfile | null;
-  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  loginUser: (email: string, password: string) => Promise<void>;
+  loading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
+  loginUser: (credentials: LoginCredentials) => Promise<void>;
+  registerUser: (data: RegistrationData) => Promise<void>;
   logout: () => Promise<void>;
-}             
+  socialLogin: (provider: string, token: string) => Promise<void>;
+  clearError: () => void;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -27,49 +46,125 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const initializeUser = async () => {
+    const initializeAuth = async () => {
       const token = localStorage.getItem('access_token');
       if (token) {
         try {
+          api.defaults.headers.Authorization = `Bearer ${token}`;
           const profile = await getProfile();
           setUser(profile);
+          setIsAuthenticated(true);
         } catch (error) {
-          console.error(error);
-          await logout();
+          console.error('Error initializing auth:', error);
+          await handleLogout();
         }
       }
+      setLoading(false);
     };
-    initializeUser();
+
+    initializeAuth();
   }, []);
 
-  const loginUser = async (email: string, password: string) => {
+  const handleLogout = async () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    delete api.defaults.headers.Authorization;
+  };
+
+  const loginUser = async (credentials: LoginCredentials) => {
     try {
-      const data = await login(email, password);
-      localStorage.setItem('access_token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
-      api.defaults.headers.Authorization = `Bearer ${data.access}`;
+      setLoading(true);
+      const response = await login(credentials);
+      api.defaults.headers.Authorization = `Bearer ${response.access}`;
       const profile = await getProfile();
       setUser(profile);
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error(error);
+      console.error('Login error:', error);
       throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const registerUser = async (data: RegistrationData) => {
+    try {
+      setLoading(true);
+      await register(data);
+      await loginUser({
+        email: data.email,
+        password: data.password
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const socialLogin = async (provider: string, token: string) => {
+    try {
+      setLoading(true);
+      let response: TokenPair;
+
+      if (provider === 'google') {
+        response = await socialAuthGoogle(token);
+      } else if (provider === 'apple') {
+        response = await socialAuthApple(token);
+      } else {
+        throw new Error(`Unsupported provider: ${provider}`);
+      }
+
+      api.defaults.headers.Authorization = `Bearer ${response.access}`;
+      const profile = await getProfile();
+      setUser(profile);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Social login error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
+      setLoading(true);
       await logoutUser();
+      await handleLogout();
+      navigate('/login');
     } catch (error) {
-      console.error(error);
+      console.error('Logout error:', error);
     } finally {
-      setUser(null);
+      setLoading(false);
     }
   };
 
+  const clearError = () => setError(null);
+
+  const value = {
+    user,
+    loading,
+    error,
+    isAuthenticated,
+    loginUser,
+    registerUser,
+    logout,
+    socialLogin,
+    clearError,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, loginUser, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
